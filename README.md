@@ -1,4 +1,4 @@
-#🖤 DudinhaNote
+# 🖤 DudinhaNote
 
 <p align="center">
   <strong>A little space for big ideas.</strong>
