@@ -1,5 +1,86 @@
 # 🖤 DudinhaNote
 
+
+<p align="center">
+  <strong>A little space for big ideas.</strong>
+  <br>
+  A visual workspace for notes, brainstorming, and creative projects.
+</p><p align="center">
+  <img src="https://img.shields.io/badge/Status-In%20Development-c4b5fd?style=flat-square" alt="In Development">
+  <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white" alt="HTML5">
+  <img src="https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white" alt="CSS3">
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
+</p>---
+
+
+✦ About
+
+
+DudinhaNote is a free, visual note-taking and brainstorming app inspired by "Milanote" (https://milanote.com/).
+
+
+I created it as a Brazilian student who wanted a more accessible space to organize ideas, study, plan weekly tasks, and develop stories and RPG campaigns.
+
+
+This is my first project, built to solve a personal problem and learn along the way. It's still a work in progress, so bugs and improvements are expected.
+
+
+✧ Features
+
+
+- Visual boards — Create, rename, and switch between boards, including nested boards with navigation paths.
+- Notes & links — Editable text, customizable fonts, colors, formatting, and transparent backgrounds.
+- Checklists & columns — Track tasks and organize content in movable, resizable visual folders.
+- Connections — Create movable, adjustable arrows between ideas.
+- Freehand drawing — Sketch directly on the board with multiple colors, brush sizes, and an eraser.
+- Images — Paste images with "Ctrl + V", drag files onto the board, and resize or zoom into images.
+- Flexible layout — Drag, resize, and arrange cards freely, or place new items exactly where you want them.
+- Undo & redo — Reverse actions with "Ctrl + Z", "Ctrl + Y", or "Ctrl + Shift + Z".
+- Copy & duplicate — Use "Ctrl + C" and "Ctrl + V" to duplicate selected board items during the current session.
+- Personalization — Dark theme, independent card colors, transparent notes, and adjustable text sizes.
+- Local autosave — Board content and images are saved locally using IndexedDB.
+
+## 📥 Windows downloads and installation
+
+Download the [latest release](https://github.com/dudalina012/DudinhaNote/releases/latest) and choose one of these options:
+
+- **Installer (.exe):** download `DudinhaNote.Setup.1.0.0.exe` and follow the setup instructions. It creates Start menu and desktop shortcuts.
+- **Portable version (.zip):** download `DudinhaNote-1.0.0-win.zip`, extract it to a folder, and open `DudinhaNote.exe`. No installer is required.
+
+Both options run the same app. Your boards and images remain stored locally on this computer.
+
+### Build from source
+
+Install Node.js, then run these commands from the project folder:
+
+```powershell
+npm install
+npm run build
+```
+
+The Windows installer and portable ZIP are created in the `dist` folder.
+
+
+
+🖼️ Screenshots
+
+
+A first look at DudinhaNote.
+
+
+<!-- Add your screenshots to a folder such as assets/screenshots/ and uncomment the examples below. --><!--
+<p align="center">
+  <img src="assets/screenshots/main-board.png" width="800" alt="DudinhaNote main board">
+  <br>
+  <em>The main workspace</em>
+</p>
+
+
+<p align="center">
+  <img src="assets/screenshots/notes-and-columns.png" width="800" alt="Notes and columns">
+  <br>
+  <em>Notes, checklists, and visual organization</em># 🖤 DudinhaNote
+
 <p align="center">
   <strong>A little space for big ideas.</strong>
   <br>
