@@ -1,0 +1,8 @@
+node_modules/
+dist/
+DudinhaNote.zip
+DudinhaNote - Para compartilhar/*.exe
+*.blockmap
+builder-debug.yml
+Thumbs.db
+.DS_Store

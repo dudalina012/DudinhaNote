@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>DudinhaNote</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="renderer.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div class="brand-name">DudinhaNote</div>
+        </div>
+        <div class="sidebar-section">
+          <div class="section-label">SEU ESPAÇO</div>
+          <div id="board-list" class="board-list"></div>
+          <button id="new-board" class="new-board-button" type="button">
+            <span class="plus">+</span> Novo quadro
+          </button>
+        </div>
+        <div class="sidebar-footer">
+          <span class="local-indicator"></span>
+          <span>Seus dados ficam neste PC</span>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <nav id="breadcrumbs" class="breadcrumbs" aria-label="Caminho do quadro">
+            <button id="breadcrumb-home" class="breadcrumb-home" type="button">Meus quadros</button>
+            <div id="breadcrumb-parents" class="breadcrumb-parents"></div>
+            <span class="breadcrumb-divider">/</span>
+            <input id="board-title" class="board-title-input" aria-label="Nome do quadro" maxlength="80" />
+          </nav>
+          <div class="topbar-actions">
+            <span class="save-status"><span class="save-dot"></span><span id="save-label">Salvo neste PC</span></span>
+            <div class="history-actions" aria-label="Histórico de ações">
+              <button id="undo-action" class="icon-button history-button" type="button" aria-label="Desfazer ação" title="Desfazer (Ctrl+Z)" disabled>↶</button>
+              <button id="redo-action" class="icon-button history-button" type="button" aria-label="Refazer ação" title="Refazer (Ctrl+Y ou Ctrl+Shift+Z)" disabled>↷</button>
+            </div>
+            <button id="zoom-out" class="icon-button" type="button" aria-label="Diminuir zoom" title="Diminuir zoom">−</button>
+            <span id="zoom-label" class="zoom-label">100%</span>
+            <button id="zoom-in" class="icon-button" type="button" aria-label="Aumentar zoom" title="Aumentar zoom">+</button>
+          </div>
+        </header>
+
+        <section id="viewport" class="viewport" aria-label="Área do quadro">
+          <div id="stage-wrap" class="stage-wrap">
+            <div id="stage" class="stage">
+              <svg id="connections" class="connections" aria-label="Conexões do quadro"></svg>
+              <div id="items-layer" class="items-layer"></div>
+            </div>
+          </div>
+          <div id="empty-hint" class="empty-hint">
+            <div class="empty-illustration"><span></span><span></span><span></span></div>
+            <h2>Um espaço só seu</h2>
+            <p>Comece com uma anotação, uma lista ou uma imagem.<br />Tudo o que você criar fica salvo neste computador.</p>
+          </div>
+          <div id="line-hint" class="line-hint" hidden>Clique no quadro para definir o início e o fim da linha</div>
+        </section>
+
+        <nav class="tool-dock" aria-label="Criar conteúdo">
+          <button class="tool-button" data-tool="note" type="button" title="Criar anotação">
+            <span class="tool-icon note-icon"><i></i><i></i><i></i></span><span>Anotação</span>
+          </button>
+          <button class="tool-button" data-tool="link" type="button" title="Criar link">
+            <span class="tool-icon link-icon">↗</span><span>Link</span>
+          </button>
+          <button class="tool-button" data-tool="checklist" type="button" title="Criar checklist">
+            <span class="tool-icon checklist-icon"><i>✓</i><i></i><i></i></span><span>Checklist</span>
+          </button>
+          <button class="tool-button" data-tool="column" type="button" title="Criar coluna">
+            <span class="tool-icon column-icon"><i></i><i></i></span><span>Coluna</span>
+          </button>
+          <button class="tool-button" data-tool="board" type="button" title="Criar um quadro dentro deste quadro">
+            <span class="tool-icon board-icon">▣</span><span>Quadro</span>
+          </button>
+          <span class="dock-divider"></span>
+          <button class="tool-button" data-tool="line" type="button" title="Desenhar uma linha ou seta">
+            <span class="tool-icon line-icon">↗</span><span>Linha</span>
+          </button>
+          <button class="tool-button draw-tool-button" data-tool="draw" type="button" title="Desenho livre">
+            <span class="tool-icon draw-icon">✎</span><span>Desenhar</span>
+          </button>
+          <button id="image-button" class="tool-button" type="button" title="Adicionar imagem">
+            <span class="tool-icon image-icon"><i></i></span><span>Imagem</span>
+          </button>
+          <button id="paste-image-button" class="tool-button paste-image-button" type="button" title="Colar imagem da área de transferência">
+            <span class="tool-icon paste-icon">▣</span><span>Colar foto</span>
+          </button>
+          <input id="image-input" type="file" accept="image/*" multiple hidden />
+        </nav>
+        <div id="drawing-tools" class="drawing-tools" aria-label="Opções de desenho" hidden>
+          <span class="selection-label">COR</span>
+          <div class="color-options draw-color-options" aria-label="Cor do pincel">
+            <button class="draw-color-swatch selected" data-draw-color="#f2f2ed" style="--swatch:#f2f2ed" type="button" aria-label="Branco" title="Branco"></button>
+            <button class="draw-color-swatch" data-draw-color="#f06a62" style="--swatch:#f06a62" type="button" aria-label="Vermelho" title="Vermelho"></button>
+            <button class="draw-color-swatch" data-draw-color="#f3c65c" style="--swatch:#f3c65c" type="button" aria-label="Amarelo" title="Amarelo"></button>
+            <button class="draw-color-swatch" data-draw-color="#65c69a" style="--swatch:#65c69a" type="button" aria-label="Verde" title="Verde"></button>
+            <button class="draw-color-swatch" data-draw-color="#68a9f0" style="--swatch:#68a9f0" type="button" aria-label="Azul" title="Azul"></button>
+            <button class="draw-color-swatch" data-draw-color="#ce8de9" style="--swatch:#ce8de9" type="button" aria-label="Lilás" title="Lilás"></button>
+          </div>
+          <span class="dock-divider"></span>
+          <span class="selection-label">PINCEL</span>
+          <div class="draw-size-options" aria-label="Tamanho do pincel">
+            <button class="draw-size-button selected" data-draw-size="2" type="button" aria-label="Pincel pequeno" title="Pequeno"><i class="brush-small"></i></button>
+            <button class="draw-size-button" data-draw-size="5" type="button" aria-label="Pincel médio" title="Médio"><i class="brush-medium"></i></button>
+            <button class="draw-size-button" data-draw-size="10" type="button" aria-label="Pincel grande" title="Grande"><i class="brush-large"></i></button>
+          </div>
+          <span class="dock-divider"></span>
+          <button id="eraser-tool" class="eraser-tool" type="button" aria-pressed="false" title="Apagar traços">Borracha</button>
+        </div>
+        <div id="selection-tools" class="selection-tools" hidden>
+          <div id="background-options" class="selection-group">
+            <span class="selection-label">FUNDO</span>
+            <div class="color-options card-background-options" aria-label="Cor de fundo do elemento">
+              <button data-background="#fffefa" class="background-swatch selected" style="--swatch:#fffefa" aria-label="Branco" title="Branco"></button>
+              <button data-background="#f6d365" class="background-swatch" style="--swatch:#f6d365" aria-label="Amarelo" title="Amarelo"></button>
+              <button data-background="#f5c2a0" class="background-swatch" style="--swatch:#f5c2a0" aria-label="Pêssego" title="Pêssego"></button>
+              <button data-background="#efb5bc" class="background-swatch" style="--swatch:#efb5bc" aria-label="Rosa" title="Rosa"></button>
+              <button data-background="#c5dfb0" class="background-swatch" style="--swatch:#c5dfb0" aria-label="Verde" title="Verde"></button>
+              <button data-background="#a9d6e5" class="background-swatch" style="--swatch:#a9d6e5" aria-label="Azul" title="Azul"></button>
+              <button data-background="#c7b6e8" class="background-swatch" style="--swatch:#c7b6e8" aria-label="Lilás" title="Lilás"></button>
+              <button data-background="transparent" class="background-swatch transparent-swatch" aria-label="Transparente" title="Transparente"><span aria-hidden="true"></span></button>
+            </div>
+          </div>
+          <span class="dock-divider"></span>
+          <div id="text-format-options" class="selection-group">
+            <label class="visually-hidden" for="font-family">Fonte</label>
+            <select id="font-family" class="format-select" aria-label="Fonte do texto">
+              <option value="Segoe UI">Segoe UI</option>
+              <option value="Arial">Arial</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Verdana">Verdana</option>
+              <option value="Trebuchet MS">Trebuchet MS</option>
+              <option value="Courier New">Courier New</option>
+              <option value="Consolas">Consolas</option>
+              <option value="Comic Sans MS">Comic Sans MS</option>
+              <option value="Impact">Impact</option>
+            </select>
+            <label class="visually-hidden" for="font-size-input">Tamanho do texto</label>
+            <input id="font-size-input" class="dimension-input font-size-input" type="number" min="6" max="300" step="1" value="16" aria-label="Tamanho do texto em pixels" title="Tamanho do texto em pixels" />
+            <button class="format-preset" data-font-size="32" type="button" title="Aplicar tamanho de título">Título</button>
+            <button class="format-preset" data-font-size="22" type="button" title="Aplicar tamanho de subtítulo">Subtítulo</button>
+            <button class="format-preset" data-font-size="12" type="button" title="Aplicar tamanho pequeno">Pequeno</button>
+            <button id="bold-text" class="format-toggle" type="button" aria-label="Negrito" aria-pressed="false" title="Negrito"><strong>B</strong></button>
+            <button id="italic-text" class="format-toggle" type="button" aria-label="Itálico" aria-pressed="false" title="Itálico"><em>I</em></button>
+          </div>
+          <span class="dock-divider"></span>
+          <span id="text-color-label" class="selection-label">TEXTO</span>
+          <div class="color-options" aria-label="Cor do texto">
+            <button data-color="#343b45" class="color-swatch selected" aria-label="Grafite" title="Grafite"></button>
+            <button data-color="#bf5b4b" class="color-swatch" aria-label="Terracota" title="Terracota"></button>
+            <button data-color="#d19331" class="color-swatch" aria-label="Mostarda" title="Mostarda"></button>
+            <button data-color="#55816d" class="color-swatch" aria-label="Verde" title="Verde"></button>
+            <button data-color="#5574a4" class="color-swatch" aria-label="Azul" title="Azul"></button>
+            <button data-color="#86689b" class="color-swatch" aria-label="Lilás" title="Lilás"></button>
+            <button data-color="#e4e6e8" class="color-swatch white-text-swatch" aria-label="Branco" title="Branco"></button>
+          </div>
+          <span class="dock-divider"></span>
+          <button id="font-smaller" class="text-size-button" type="button" title="Diminuir texto">A−</button>
+          <button id="font-larger" class="text-size-button" type="button" title="Aumentar texto">A+</button>
+          <span class="dock-divider"></span>
+          <div class="selection-group element-size-options">
+            <label class="visually-hidden" for="element-width">Largura em pixels</label>
+            <input id="element-width" class="dimension-input" type="number" min="40" max="6000" step="1" aria-label="Largura em pixels" title="Largura em pixels" />
+            <span aria-hidden="true">×</span>
+            <label class="visually-hidden" for="element-height">Altura em pixels</label>
+            <input id="element-height" class="dimension-input" type="number" min="40" max="4000" step="1" aria-label="Altura em pixels" title="Altura em pixels" />
+          </div>
+          <span class="dock-divider"></span>
+          <button id="delete-selected" class="delete-button" type="button" title="Excluir selecionado">Excluir</button>
+        </div>
+      </main>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <dialog id="image-viewer" class="image-viewer" aria-label="Visualizador de imagem">
+      <button id="image-viewer-close" class="image-viewer-close" type="button" aria-label="Fechar imagem" title="Fechar">×</button>
+      <img id="image-viewer-content" alt="" />
+    </dialog>
+  </body>
+</html>
