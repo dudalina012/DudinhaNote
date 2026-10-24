@@ -1,7 +1,7 @@
 const DB_NAME = 'milanote-local';
 const DB_VERSION = 1;
-const STAGE_WIDTH = 6000;
-const STAGE_HEIGHT = 4000;
+const DEFAULT_STAGE_WIDTH = 6000;
+const DEFAULT_STAGE_HEIGHT = 4000;
 const MIN_ZOOM = 0.55;
 const MAX_ZOOM = 1.4;
 const MAX_HISTORY_STEPS = 40;
@@ -11,6 +11,8 @@ const stageWrap = document.querySelector('#stage-wrap');
 const stage = document.querySelector('#stage');
 const itemsLayer = document.querySelector('#items-layer');
 const connections = document.querySelector('#connections');
+const foregroundItems = document.querySelector('#foreground-items');
+const foregroundConnections = document.querySelector('#foreground-connections');
 const boardList = document.querySelector('#board-list');
 const boardTitle = document.querySelector('#board-title');
 const breadcrumbHome = document.querySelector('#breadcrumb-home');
@@ -48,7 +50,9 @@ let appClipboard = null;
 let pasteAppClipboard = false;
 let firstLinePoint = null;
 let activeStroke = null;
-const drawingSettings = { color: '#f2f2ed', width: 2, eraser: false };
+const drawingSettings = { color: '#f2f2ed', width: 2, eraser: false, layer: 'front' };
+let stageWidth = DEFAULT_STAGE_WIDTH;
+let stageHeight = DEFAULT_STAGE_HEIGHT;
 let zoom = 1;
 let spaceDown = false;
 let dragState = null;
@@ -108,7 +112,9 @@ function renderColumn(element, card, top, kind, remove) {
   const content = document.createElement('div');
   content.className = 'column-content';
   content.dataset.columnId = element.id;
-  const childElements = elements.filter((child) => child.containerId === element.id);
+  const childElements = elements
+    .filter((child) => child.containerId === element.id)
+    .sort((a, b) => (a.z ?? a.createdAt ?? 0) - (b.z ?? b.createdAt ?? 0));
   const emptyHint = document.createElement('div');
   emptyHint.className = 'column-empty-hint';
   emptyHint.textContent = 'Arraste itens para organizar aqui';
@@ -122,11 +128,19 @@ function renderColumn(element, card, top, kind, remove) {
   childConnections.setAttribute('viewBox', `0 0 ${Math.max(1, element.width - 16)} ${Math.max(1, element.height - 50)}`);
   childConnections.setAttribute('preserveAspectRatio', 'none');
   content.append(childConnections);
+  const childForegroundConnections = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  childForegroundConnections.classList.add('connections', 'column-connections', 'column-foreground-connections');
+  childForegroundConnections.dataset.parentColumnId = element.id;
+  childForegroundConnections.setAttribute('viewBox', `0 0 ${Math.max(1, element.width - 16)} ${Math.max(1, element.height - 50)}`);
+  childForegroundConnections.setAttribute('preserveAspectRatio', 'none');
+  const childForegroundItems = document.createElement('div');
+  childForegroundItems.className = 'items-layer column-foreground-items';
   for (const child of childElements) {
     if (child.type === 'line') renderLine(child, childConnections, offset);
-    else if (child.type === 'drawing') renderDrawing(child, childConnections, offset);
-    else renderElement(child, content, element);
+    else if (child.type === 'drawing') renderDrawing(child, child.layer === 'front' ? childForegroundConnections : childConnections, offset);
+    else renderElement(child, child.layer === 'front' ? childForegroundItems : content, element);
   }
+  content.append(childForegroundConnections, childForegroundItems);
   card.append(content);
 }
 
@@ -153,10 +167,9 @@ function getElementOffset(element) {
 
 function updateColumnConnections(column, card) {
   const content = [...card.children].find((child) => child.classList.contains('column-content'));
-  const svg = content?.querySelector(':scope > .column-connections');
-  if (svg) {
+  content?.querySelectorAll(':scope > .column-connections').forEach((svg) => {
     svg.setAttribute('viewBox', `0 0 ${Math.max(1, column.width - 16)} ${Math.max(1, column.height - 50)}`);
-  }
+  });
 }
 
 function findColumnAtPosition(point, excludedId = null) {
@@ -173,7 +186,7 @@ function findColumnAtPosition(point, excludedId = null) {
 }
 
 function updateLineVisual(element) {
-  const path = [...connections.querySelectorAll('.connection-path')]
+  const path = [...stage.querySelectorAll('.connection-path')]
     .find((entry) => entry.dataset.id === element.id);
   if (!path) return;
   const layer = path.closest('svg');
@@ -183,7 +196,7 @@ function updateLineVisual(element) {
 }
 
 function updateDrawingVisual(element) {
-  const path = [...connections.querySelectorAll('.drawing-path')]
+  const path = [...stage.querySelectorAll('.drawing-path')]
     .find((entry) => entry.dataset.id === element.id);
   if (!path) return;
   const offset = getElementOffset(element);
@@ -371,20 +384,20 @@ function pasteCopiedElement() {
   element.boardId = activeBoardId;
   element.createdAt = Date.now();
   if (element.type === 'line') {
-    element.x1 = Math.min(STAGE_WIDTH, element.x1 + 28);
-    element.y1 = Math.min(STAGE_HEIGHT, element.y1 + 28);
-    element.x2 = Math.min(STAGE_WIDTH, element.x2 + 28);
-    element.y2 = Math.min(STAGE_HEIGHT, element.y2 + 28);
+    element.x1 = Math.min(stageWidth, element.x1 + 28);
+    element.y1 = Math.min(stageHeight, element.y1 + 28);
+    element.x2 = Math.min(stageWidth, element.x2 + 28);
+    element.y2 = Math.min(stageHeight, element.y2 + 28);
     if (Number.isFinite(element.controlX)) element.controlX += 28;
     if (Number.isFinite(element.controlY)) element.controlY += 28;
   } else if (element.type === 'drawing') {
     element.points = element.points.map((point) => ({
-      x: Math.min(STAGE_WIDTH, point.x + 28),
-      y: Math.min(STAGE_HEIGHT, point.y + 28),
+      x: Math.min(stageWidth, point.x + 28),
+      y: Math.min(stageHeight, point.y + 28),
     }));
   } else {
-    element.x = Math.min(STAGE_WIDTH - element.width, element.x + 28);
-    element.y = Math.min(STAGE_HEIGHT - element.height, element.y + 28);
+    element.x = Math.min(stageWidth - element.width, element.x + 28);
+    element.y = Math.min(stageHeight - element.height, element.y + 28);
   }
   recordHistory();
   elements.push(element);
@@ -489,7 +502,14 @@ async function saveBoard(board) {
 }
 
 function createBoardObject(name) {
-  return { id: id(), name, createdAt: Date.now(), updatedAt: Date.now() };
+  return {
+    id: id(),
+    name,
+    canvasWidth: DEFAULT_STAGE_WIDTH,
+    canvasHeight: DEFAULT_STAGE_HEIGHT,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
 }
 
 function getBoardPath(boardId) {
@@ -593,6 +613,7 @@ async function switchBoard(boardId) {
   try {
     elements = await getBoardElements(boardId);
     const board = boards.find((entry) => entry.id === boardId);
+    setCanvasSize(board?.canvasWidth, board?.canvasHeight);
     boardTitle.value = board?.name ?? 'Meu quadro';
     if (board) {
       board.lastOpenedAt = Date.now();
@@ -691,16 +712,32 @@ function clearObjectUrls() {
   objectUrls = [];
 }
 
+function setCanvasSize(width, height) {
+  stageWidth = Number.isFinite(width) && width >= DEFAULT_STAGE_WIDTH ? width : DEFAULT_STAGE_WIDTH;
+  stageHeight = Number.isFinite(height) && height >= DEFAULT_STAGE_HEIGHT ? height : DEFAULT_STAGE_HEIGHT;
+  stage.style.width = `${stageWidth}px`;
+  stage.style.height = `${stageHeight}px`;
+  stageWrap.style.width = `${stageWidth * zoom}px`;
+  stageWrap.style.height = `${stageHeight * zoom}px`;
+  for (const svg of [connections, foregroundConnections]) {
+    svg.style.width = `${stageWidth}px`;
+    svg.style.height = `${stageHeight}px`;
+    svg.setAttribute('viewBox', `0 0 ${stageWidth} ${stageHeight}`);
+  }
+}
+
 function renderAll() {
   clearObjectUrls();
   itemsLayer.replaceChildren();
+  foregroundItems.replaceChildren();
   connections.replaceChildren();
-  connections.setAttribute('viewBox', `0 0 ${STAGE_WIDTH} ${STAGE_HEIGHT}`);
+  foregroundConnections.replaceChildren();
+  setCanvasSize(stageWidth, stageHeight);
   for (const element of elements) {
     if (element.containerId) continue;
     if (element.type === 'line') renderLine(element);
-    else if (element.type === 'drawing') renderDrawing(element);
-    else renderElement(element);
+    else if (element.type === 'drawing') renderDrawing(element, element.layer === 'front' ? foregroundConnections : connections);
+    else renderElement(element, element.layer === 'front' ? foregroundItems : itemsLayer);
   }
   emptyHint.hidden = elements.length > 0;
 }
@@ -716,7 +753,9 @@ function renderElement(element, layer = itemsLayer, parentColumn = null) {
   card.style.width = `${element.width}px`;
   card.style.height = ['image', 'column', 'board'].includes(element.type) || element.customSize ? `${element.height}px` : 'auto';
   if (element.type !== 'image') card.style.minHeight = element.customSize ? '40px' : `${{ note: 105, checklist: 125, link: 125, column: 150, board: 0 }[element.type]}px`;
-  card.style.zIndex = String(element.z ?? 1);
+  card.style.zIndex = String(parentColumn
+    ? (element.layer === 'front' ? 1 : 0)
+    : (element.layer === 'back' ? 0 : (element.z ?? 1)));
   if (['note', 'checklist', 'link', 'column'].includes(element.type)) {
     const background = CARD_BACKGROUNDS.has(element.background)
       ? element.background
@@ -909,7 +948,7 @@ async function pasteBoardCover(board) {
 
 function renderNote(element, card) {
   const body = document.createElement('div');
-  body.className = 'note-body';
+  body.className = `note-body${element.quote ? ' quoted' : ''}`;
   body.contentEditable = 'true';
   body.setAttribute('role', 'textbox');
   body.setAttribute('aria-label', 'Texto da anotação');
@@ -930,6 +969,7 @@ function renderChecklist(element, card) {
   const list = document.createElement('div');
   list.className = 'checklist-items';
   element.tasks ??= [{ text: '', done: false }];
+  const isComplete = () => element.tasks.length > 0 && element.tasks.every((task) => task.done);
   element.tasks.forEach((task, index) => {
     const row = document.createElement('div');
     row.className = `checklist-row${task.done ? ' done' : ''}`;
@@ -943,6 +983,7 @@ function renderChecklist(element, card) {
       selectElement(element.id);
       task.done = checkbox.checked;
       row.classList.toggle('done', task.done);
+      add.hidden = isComplete();
       scheduleSaveElement(element);
     });
     const text = document.createElement('div');
@@ -963,7 +1004,7 @@ function renderChecklist(element, card) {
         recordHistory();
         element.tasks.splice(index + 1, 0, { text: '', done: false });
         renderAll();
-        const newText = itemsLayer.querySelector(`[data-id="${element.id}"] .checklist-row:nth-child(${index + 2}) [contenteditable="true"]`);
+        const newText = stage.querySelector(`[data-id="${element.id}"] .checklist-row:nth-child(${index + 2}) [contenteditable="true"]`);
         newText?.focus();
         selectElement(element.id);
       }
@@ -980,6 +1021,7 @@ function renderChecklist(element, card) {
   });
   const add = document.createElement('div');
   add.className = 'checklist-add';
+  add.hidden = isComplete();
   add.contentEditable = 'true';
   add.setAttribute('role', 'textbox');
   add.setAttribute('aria-label', 'Adicionar tarefa');
@@ -992,7 +1034,7 @@ function renderChecklist(element, card) {
     element.tasks.push({ text, done: false });
     renderAll();
     selectElement(element.id);
-    itemsLayer.querySelector(`[data-id="${element.id}"] .checklist-add`)?.focus();
+    stage.querySelector(`[data-id="${element.id}"] .checklist-add`)?.focus();
   });
   card.append(list, add);
 }
@@ -1074,11 +1116,12 @@ function applyTextStyle(element, card) {
   const family = FONT_FAMILIES.has(element.fontFamily) ? element.fontFamily : 'Segoe UI';
   const defaultSize = { note: 16, checklist: 14, link: 14, column: 13 }[element.type] ?? 16;
   const size = Math.max(6, Math.min(300, Number(element.fontSize) || defaultSize));
+  card.querySelector('.note-body')?.classList.toggle('quoted', Boolean(element.quote));
   const textNodes = card.querySelectorAll('.note-body,.checklist-row [contenteditable="true"],.checklist-add,.link-title,.link-url,.link-open,.column-title');
   textNodes.forEach((node) => {
     node.style.fontFamily = `"${family}", sans-serif`;
     node.style.fontWeight = element.bold ? '700' : (node.classList.contains('link-title') || node.classList.contains('column-title') ? '600' : '400');
-    node.style.fontStyle = element.italic ? 'italic' : 'normal';
+    node.style.fontStyle = element.italic || (element.type === 'note' && element.quote) ? 'italic' : 'normal';
     if (node.classList.contains('link-url')) node.style.fontSize = `${Math.max(8, Math.round(size * 0.8))}px`;
     else node.style.fontSize = `${size}px`;
     node.style.color = element.color ?? (element.background === 'transparent' || element.noteBackground === 'transparent' ? '#e4e6e8' : '#343b45');
@@ -1212,18 +1255,18 @@ function safeExternalUrl(value) {
 
 function selectElement(elementId) {
   selectedId = elementId;
-  itemsLayer.querySelectorAll('.board-item').forEach((card) => {
+  stage.querySelectorAll('.board-item').forEach((card) => {
     card.classList.toggle('selected', card.dataset.id === elementId);
   });
-  connections.querySelectorAll('.connection-path').forEach((path) => {
+  stage.querySelectorAll('.connection-path,.drawing-path').forEach((path) => {
     path.classList.toggle('selected', path.dataset.id === elementId);
   });
-  connections.querySelectorAll('.line-handles').forEach((handles) => {
+  stage.querySelectorAll('.line-handles').forEach((handles) => {
     if (handles.dataset.id !== elementId) handles.remove();
   });
   const element = elements.find((entry) => entry.id === elementId);
   if (element?.type === 'line') {
-    const path = [...connections.querySelectorAll('.connection-path')]
+    const path = [...stage.querySelectorAll('.connection-path')]
       .find((entry) => entry.dataset.id === elementId);
     if (path) renderLineHandles(element, path.closest('svg'), getElementOffset(element));
   }
@@ -1233,9 +1276,11 @@ function selectElement(elementId) {
 function updateSelectionTools() {
   const element = elements.find((entry) => entry.id === selectedId);
   const textElement = element && ['note', 'checklist', 'link', 'column'].includes(element.type);
-  selectionTools.hidden = !element || ['line', 'drawing'].includes(element.type) || activeTool === 'draw';
+  selectionTools.hidden = !element || element.type === 'line' || activeTool === 'draw';
+  document.querySelector('#element-layer-options').hidden = element?.type === 'line';
   backgroundOptions.hidden = !textElement;
   textFormatOptions.hidden = !textElement;
+  document.querySelector('#quote-text').hidden = element?.type !== 'note';
   document.querySelector('#text-color-label').hidden = !textElement;
   document.querySelector('.color-options[aria-label="Cor do texto"]').hidden = !textElement;
   document.querySelector('#font-smaller').hidden = !textElement;
@@ -1255,8 +1300,14 @@ function updateSelectionTools() {
     : '';
   document.querySelector('#bold-text').setAttribute('aria-pressed', String(Boolean(element?.bold)));
   document.querySelector('#italic-text').setAttribute('aria-pressed', String(Boolean(element?.italic)));
+  document.querySelector('#quote-text').setAttribute('aria-pressed', String(Boolean(element?.quote)));
+  const elementLayer = document.querySelector('#element-layer');
+  elementLayer.querySelector('option[value="default"]').hidden = element?.type === 'drawing';
+  elementLayer.value = ['front', 'back'].includes(element?.layer)
+    ? element.layer
+    : (element?.type === 'drawing' ? 'back' : 'default');
   document.querySelector('#element-width').value = element && element.type !== 'line' ? String(Math.round(element.width ?? 0)) : '';
-  const selectedCard = element && element.type !== 'line' ? itemsLayer.querySelector(`[data-id="${element.id}"]`) : null;
+  const selectedCard = element && element.type !== 'line' ? stage.querySelector(`.board-item[data-id="${element.id}"]`) : null;
   const displayedHeight = selectedCard && !element.customSize && element.type !== 'image'
     ? selectedCard.getBoundingClientRect().height / zoom
     : element?.height;
@@ -1276,6 +1327,9 @@ function updateSelectionTools() {
   });
   document.querySelectorAll('.draw-size-button').forEach((button) => {
     button.classList.toggle('selected', Number(button.dataset.drawSize) === drawingSettings.width);
+  });
+  document.querySelector('#drawing-layer').addEventListener('change', (event) => {
+    drawingSettings.layer = event.currentTarget.value;
   });
   lineHint.hidden = activeTool !== 'line';
 }
@@ -1322,7 +1376,7 @@ function createElement(type, position, extra = {}, { focus = true } = {}) {
   elements.push(element);
   selectedId = element.id;
   renderAll();
-  const renderedCard = itemsLayer.querySelector(`[data-id="${element.id}"]`);
+  const renderedCard = stage.querySelector(`.board-item[data-id="${element.id}"]`);
   if (renderedCard && ['note', 'checklist', 'link'].includes(type) && !element.customSize) {
     element.y = Math.max(0, position.y - renderedCard.offsetHeight / 2);
     renderedCard.style.top = `${element.y - getElementOffset(element).y}px`;
@@ -1331,7 +1385,7 @@ function createElement(type, position, extra = {}, { focus = true } = {}) {
   updateSelectionTools();
   scheduleSaveElement(element);
   if (focus && type === 'note') {
-    const editor = itemsLayer.querySelector(`[data-id="${element.id}"] .note-body`);
+    const editor = stage.querySelector(`[data-id="${element.id}"] .note-body`);
     editor?.focus();
   }
   return element;
@@ -1455,8 +1509,8 @@ function movePointer(event) {
     let dx = (event.clientX - dragState.startX) / zoom;
     let dy = (event.clientY - dragState.startY) / zoom;
     if (dragState.mode === 'line-move') {
-      dx = Math.max(-Math.min(dragState.origin.x1, dragState.origin.x2), Math.min(dx, STAGE_WIDTH - Math.max(dragState.origin.x1, dragState.origin.x2)));
-      dy = Math.max(-Math.min(dragState.origin.y1, dragState.origin.y2), Math.min(dy, STAGE_HEIGHT - Math.max(dragState.origin.y1, dragState.origin.y2)));
+      dx = Math.max(-Math.min(dragState.origin.x1, dragState.origin.x2), Math.min(dx, stageWidth - Math.max(dragState.origin.x1, dragState.origin.x2)));
+      dy = Math.max(-Math.min(dragState.origin.y1, dragState.origin.y2), Math.min(dy, stageHeight - Math.max(dragState.origin.y1, dragState.origin.y2)));
       element.x1 = dragState.origin.x1 + dx;
       element.y1 = dragState.origin.y1 + dy;
       element.x2 = dragState.origin.x2 + dx;
@@ -1464,18 +1518,18 @@ function movePointer(event) {
       element.controlX = dragState.origin.x + dx;
       element.controlY = dragState.origin.y + dy;
     } else if (dragState.mode === 'line-start') {
-      element.x1 = Math.max(0, Math.min(STAGE_WIDTH, point.x));
-      element.y1 = Math.max(0, Math.min(STAGE_HEIGHT, point.y));
+      element.x1 = Math.max(0, Math.min(stageWidth, point.x));
+      element.y1 = Math.max(0, Math.min(stageHeight, point.y));
       if (Number.isFinite(element.controlX)) element.controlX += element.x1 - point.x;
       if (Number.isFinite(element.controlY)) element.controlY += element.y1 - point.y;
     } else if (dragState.mode === 'line-end') {
-      element.x2 = Math.max(0, Math.min(STAGE_WIDTH, point.x));
-      element.y2 = Math.max(0, Math.min(STAGE_HEIGHT, point.y));
+      element.x2 = Math.max(0, Math.min(stageWidth, point.x));
+      element.y2 = Math.max(0, Math.min(stageHeight, point.y));
       if (Number.isFinite(element.controlX)) element.controlX += element.x2 - point.x;
       if (Number.isFinite(element.controlY)) element.controlY += element.y2 - point.y;
     } else {
-      element.controlX = Math.max(0, Math.min(STAGE_WIDTH, 2 * point.x - (element.x1 + element.x2) / 2));
-      element.controlY = Math.max(0, Math.min(STAGE_HEIGHT, 2 * point.y - (element.y1 + element.y2) / 2));
+      element.controlX = Math.max(0, Math.min(stageWidth, 2 * point.x - (element.x1 + element.x2) / 2));
+      element.controlY = Math.max(0, Math.min(stageHeight, 2 * point.y - (element.y1 + element.y2) / 2));
     }
     updateLineVisual(element);
     return;
@@ -1499,7 +1553,7 @@ function movePointer(event) {
     const dropTarget = element.type === 'column'
       ? null
       : findColumnAtPosition(canvasCoordinates(event.clientX, event.clientY), element.id);
-    itemsLayer.querySelectorAll('.column-item').forEach((columnCard) => {
+    stage.querySelectorAll('.column-item').forEach((columnCard) => {
       columnCard.classList.toggle('drop-target', columnCard.dataset.id === dropTarget?.id);
     });
   } else {
@@ -1564,7 +1618,7 @@ function endPointer(event) {
     }
     scheduleSaveElement(element);
   }
-  itemsLayer.querySelectorAll('.column-item.drop-target').forEach((columnCard) => {
+  stage.querySelectorAll('.column-item.drop-target').forEach((columnCard) => {
     columnCard.classList.remove('drop-target');
   });
   if (state.moved && element?.type === 'board') {
@@ -1585,8 +1639,8 @@ function setZoom(value) {
   const centerBefore = viewportCenter();
   zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, value));
   stage.style.transform = `scale(${zoom})`;
-  stageWrap.style.width = `${STAGE_WIDTH * zoom}px`;
-  stageWrap.style.height = `${STAGE_HEIGHT * zoom}px`;
+  stageWrap.style.width = `${stageWidth * zoom}px`;
+  stageWrap.style.height = `${stageHeight * zoom}px`;
   zoomLabel.textContent = `${Math.round(zoom * 100)}%`;
   const centerAfter = viewportCenter();
   viewport.scrollLeft += (centerBefore.x - centerAfter.x) * zoom;
@@ -1594,8 +1648,8 @@ function setZoom(value) {
 }
 
 function scrollToCanvasCenter() {
-  viewport.scrollLeft = Math.max(0, STAGE_WIDTH * zoom / 2 - viewport.clientWidth / 2);
-  viewport.scrollTop = Math.max(0, STAGE_HEIGHT * zoom / 2 - viewport.clientHeight / 2);
+  viewport.scrollLeft = Math.max(0, stageWidth * zoom / 2 - viewport.clientWidth / 2);
+  viewport.scrollTop = Math.max(0, stageHeight * zoom / 2 - viewport.clientHeight / 2);
 }
 
 function createLine(start, end) {
@@ -1625,8 +1679,8 @@ function createDrawingPath(element) {
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   const container = getElementContainer(element);
   const layer = container
-    ? connections.querySelector(`.column-connections[data-parent-column-id="${container.id}"]`)
-    : connections;
+    ? stage.querySelector(`.${element.layer === 'front' ? 'column-foreground-connections' : 'column-connections'}[data-parent-column-id="${container.id}"]`)
+    : (element.layer === 'front' ? foregroundConnections : connections);
   const offset = getElementOffset(element);
   path.setAttribute('class', 'drawing-path');
   path.setAttribute('stroke', element.color);
@@ -1636,6 +1690,14 @@ function createDrawingPath(element) {
     y: point.y - offset.y,
   }))));
   path.dataset.id = element.id;
+  path.addEventListener('pointerdown', (event) => {
+    event.stopPropagation();
+    selectElement(element.id);
+  });
+  path.addEventListener('click', (event) => {
+    event.stopPropagation();
+    selectElement(element.id);
+  });
   layer.append(path);
   return path;
 }
@@ -1678,6 +1740,7 @@ function startFreehand(event) {
       type: 'drawing',
       color: drawingSettings.color,
       width: drawingSettings.width,
+      layer: drawingSettings.layer,
       points: [point],
       createdAt: Date.now(),
       ...(container ? { containerId: container.id } : {}),
@@ -1731,7 +1794,7 @@ function finishFreehand(event) {
 }
 
 function animateNewElement(elementId) {
-  const card = itemsLayer.querySelector(`[data-id="${elementId}"]`);
+  const card = stage.querySelector(`.board-item[data-id="${elementId}"]`);
   if (!card) return;
   card.classList.add('item-arriving');
   window.setTimeout(() => card.classList.remove('item-arriving'), 260);
@@ -1851,11 +1914,11 @@ function createAtPosition(tool, position, { focus = true } = {}) {
   if (tool === 'note') createElement('note', position, { text: '', color: '#343b45', fontSize: 16 }, { focus });
   if (tool === 'checklist') {
     const element = createElement('checklist', position, { tasks: [{ text: '', done: false }], color: '#343b45', fontSize: 14 });
-    if (focus) itemsLayer.querySelector(`[data-id="${element.id}"] [contenteditable="true"]`)?.focus();
+    if (focus) stage.querySelector(`[data-id="${element.id}"] [contenteditable="true"]`)?.focus();
   }
   if (tool === 'link') {
     const element = createElement('link', position, { title: 'Novo link', url: '' });
-    if (focus) itemsLayer.querySelector(`[data-id="${element.id}"] .link-url`)?.focus();
+    if (focus) stage.querySelector(`[data-id="${element.id}"] .link-url`)?.focus();
   }
   if (tool === 'column') createElement('column', position, { title: 'Nova coluna', z: 0 });
   if (tool === 'board') void addNestedBoard(position);
@@ -1982,6 +2045,16 @@ function bindEvents() {
 
   document.querySelector('#zoom-in').addEventListener('click', () => setZoom(zoom + 0.1));
   document.querySelector('#zoom-out').addEventListener('click', () => setZoom(zoom - 0.1));
+  document.querySelector('#expand-board').addEventListener('click', () => {
+    const board = boards.find((entry) => entry.id === activeBoardId);
+    if (!board) return;
+    board.canvasWidth = stageWidth + 2000;
+    board.canvasHeight = stageHeight + 1000;
+    board.updatedAt = Date.now();
+    setCanvasSize(board.canvasWidth, board.canvasHeight);
+    void saveBoard(board);
+    showToast(`Quadro ampliado para ${board.canvasWidth} × ${board.canvasHeight} px.`);
+  });
   document.querySelector('#font-smaller').addEventListener('click', () => changeFontSize(-2));
   document.querySelector('#font-larger').addEventListener('click', () => changeFontSize(2));
   document.querySelector('#delete-selected').addEventListener('click', () => {
@@ -2003,6 +2076,8 @@ function bindEvents() {
   });
   document.querySelector('#bold-text').addEventListener('click', () => toggleTextStyle('bold'));
   document.querySelector('#italic-text').addEventListener('click', () => toggleTextStyle('italic'));
+  document.querySelector('#quote-text').addEventListener('click', () => toggleTextStyle('quote'));
+  document.querySelector('#element-layer').addEventListener('change', (event) => changeSelectedLayer(event.currentTarget.value));
   document.querySelectorAll('#element-width,#element-height').forEach((input) => {
     input.addEventListener('change', updateSelectedDimensions);
   });
@@ -2271,7 +2346,7 @@ function changeSelectedColor(color) {
   recordHistory();
   element.color = color;
   element.autoContrastText = false;
-  const card = itemsLayer.querySelector(`[data-id="${element.id}"]`);
+  const card = stage.querySelector(`.board-item[data-id="${element.id}"]`);
   if (card) applyTextStyle(element, card);
   updateSelectionTools();
   scheduleSaveElement(element);
@@ -2288,7 +2363,7 @@ function changeSelectedBackground(background) {
     element.color = background === 'transparent' ? '#e4e6e8' : '#343b45';
     element.autoContrastText = true;
   }
-  const card = itemsLayer.querySelector(`[data-id="${element.id}"]`);
+  const card = stage.querySelector(`.board-item[data-id="${element.id}"]`);
   if (card) {
     card.dataset.background = background;
     card.style.backgroundColor = background === 'transparent' ? 'transparent' : background;
@@ -2307,7 +2382,7 @@ function updateSelectedTextStyle(property, value) {
   if (element[property] === value) return;
   recordHistory();
   element[property] = value;
-  const card = itemsLayer.querySelector(`[data-id="${element.id}"]`);
+  const card = stage.querySelector(`.board-item[data-id="${element.id}"]`);
   if (card) applyTextStyle(element, card);
   updateSelectionTools();
   scheduleSaveElement(element);
@@ -2316,10 +2391,23 @@ function updateSelectedTextStyle(property, value) {
 function toggleTextStyle(property) {
   const element = elements.find((entry) => entry.id === selectedId);
   if (!element || !['note', 'checklist', 'link', 'column'].includes(element.type)) return;
+  if (property === 'quote' && element.type !== 'note') return;
   recordHistory();
   element[property] = !element[property];
-  const card = itemsLayer.querySelector(`[data-id="${element.id}"]`);
+  const card = stage.querySelector(`.board-item[data-id="${element.id}"]`);
   if (card) applyTextStyle(element, card);
+  updateSelectionTools();
+  scheduleSaveElement(element);
+}
+
+function changeSelectedLayer(layer) {
+  const element = elements.find((entry) => entry.id === selectedId);
+  if (!element || element.type === 'line' || !['default', 'front', 'back'].includes(layer)) return;
+  if ((element.layer ?? (element.type === 'drawing' ? 'back' : 'default')) === layer) return;
+  recordHistory();
+  if (layer === 'default') delete element.layer;
+  else element.layer = layer;
+  renderAll();
   updateSelectionTools();
   scheduleSaveElement(element);
 }
@@ -2330,7 +2418,7 @@ function updateSelectedDimensions(event) {
   const input = event.currentTarget;
   const value = Number(input.value);
   const isWidth = input.id === 'element-width';
-  const maximum = isWidth ? STAGE_WIDTH : STAGE_HEIGHT;
+  const maximum = isWidth ? stageWidth : stageHeight;
   if (!Number.isFinite(value) || value < 40 || value > maximum) {
     input.value = String(Math.round(isWidth ? element.width : element.height));
     return;
@@ -2338,7 +2426,7 @@ function updateSelectedDimensions(event) {
   const currentValue = isWidth ? element.width : element.height;
   if (Math.round(currentValue) === Math.round(value) && element.customSize) return;
   recordHistory();
-  const card = itemsLayer.querySelector(`[data-id="${element.id}"]`);
+  const card = stage.querySelector(`.board-item[data-id="${element.id}"]`);
   if (!element.customSize && card) {
     element.width = card.getBoundingClientRect().width / zoom;
     element.height = card.getBoundingClientRect().height / zoom;
@@ -2368,6 +2456,7 @@ async function initialise() {
     }
     boards.sort((a, b) => (b.lastOpenedAt ?? 0) - (a.lastOpenedAt ?? 0));
     activeBoardId = boards[0].id;
+    setCanvasSize(boards[0].canvasWidth, boards[0].canvasHeight);
     boards[0].lastOpenedAt = Date.now();
     void saveBoard(boards[0]);
     boardTitle.value = boards[0].name;

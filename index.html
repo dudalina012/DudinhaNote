@@ -45,6 +45,7 @@
               <button id="undo-action" class="icon-button history-button" type="button" aria-label="Desfazer ação" title="Desfazer (Ctrl+Z)" disabled>↶</button>
               <button id="redo-action" class="icon-button history-button" type="button" aria-label="Refazer ação" title="Refazer (Ctrl+Y ou Ctrl+Shift+Z)" disabled>↷</button>
             </div>
+            <button id="expand-board" class="expand-board-button" type="button" title="Aumentar a largura e a altura do quadro">Aumentar quadro</button>
             <button id="zoom-out" class="icon-button" type="button" aria-label="Diminuir zoom" title="Diminuir zoom">−</button>
             <span id="zoom-label" class="zoom-label">100%</span>
             <button id="zoom-in" class="icon-button" type="button" aria-label="Aumentar zoom" title="Aumentar zoom">+</button>
@@ -56,6 +57,8 @@
             <div id="stage" class="stage">
               <svg id="connections" class="connections" aria-label="Conexões do quadro"></svg>
               <div id="items-layer" class="items-layer"></div>
+              <svg id="foreground-connections" class="connections foreground-connections" aria-label="Desenhos na frente dos itens"></svg>
+              <div id="foreground-items" class="items-layer foreground-items"></div>
             </div>
           </div>
           <div id="empty-hint" class="empty-hint">
@@ -116,8 +119,22 @@
           </div>
           <span class="dock-divider"></span>
           <button id="eraser-tool" class="eraser-tool" type="button" aria-pressed="false" title="Apagar traços">Borracha</button>
+          <label class="visually-hidden" for="drawing-layer">Camada dos próximos desenhos</label>
+          <select id="drawing-layer" class="format-select layer-select" aria-label="Camada dos próximos desenhos" title="Escolher se os desenhos ficam na frente ou atrás dos itens">
+            <option value="front">Na frente</option>
+            <option value="back">Atrás</option>
+          </select>
         </div>
         <div id="selection-tools" class="selection-tools" hidden>
+          <div id="element-layer-options" class="selection-group">
+            <label class="visually-hidden" for="element-layer">Camada do item</label>
+            <select id="element-layer" class="format-select layer-select" aria-label="Camada do item" title="Escolher se o item fica na frente ou atrás dos outros">
+              <option value="default">Padrão</option>
+              <option value="front">Na frente</option>
+              <option value="back">Atrás</option>
+            </select>
+          </div>
+          <span class="dock-divider"></span>
           <div id="background-options" class="selection-group">
             <span class="selection-label">FUNDO</span>
             <div class="color-options card-background-options" aria-label="Cor de fundo do elemento">
@@ -153,6 +170,7 @@
             <button class="format-preset" data-font-size="12" type="button" title="Aplicar tamanho pequeno">Pequeno</button>
             <button id="bold-text" class="format-toggle" type="button" aria-label="Negrito" aria-pressed="false" title="Negrito"><strong>B</strong></button>
             <button id="italic-text" class="format-toggle" type="button" aria-label="Itálico" aria-pressed="false" title="Itálico"><em>I</em></button>
+            <button id="quote-text" class="format-toggle quote-toggle" type="button" aria-label="Citação" aria-pressed="false" title="Citação">❞</button>
           </div>
           <span class="dock-divider"></span>
           <span id="text-color-label" class="selection-label">TEXTO</span>

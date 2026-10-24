@@ -66,6 +66,8 @@ button { color: inherit; }
 .board-title-input { border: 0; background: transparent; outline: 0; color: #e4e6e8; font-weight: 600; font-size: 14px; width: min(380px, 45vw); padding: 5px 3px; border-radius: 4px; }
 .board-title-input:focus { background: #292a2e; }
 .topbar-actions { display: flex; align-items: center; gap: 9px; }
+.expand-board-button { height: 27px; border: 1px solid #404247; border-radius: 5px; background: #25262a; color: #c5c8cc; padding: 0 9px; font-size: 10px; cursor: pointer; white-space: nowrap; }
+.expand-board-button:hover { background: #33353a; color: #f0f1f2; }
 .save-status { font-size: 10px; color: #8d938f; display: flex; align-items: center; gap: 7px; margin-right: 18px; }
 .save-dot { width: 6px; height: 6px; }
 .save-status.saving .save-dot { background: #d3a049; }
@@ -82,7 +84,10 @@ button { color: inherit; }
 .viewport.right-panning,.viewport.panning { cursor: grabbing; }
 .stage-wrap { position: relative; width: 6000px; height: 4000px; flex: 0 0 auto; }
 .stage { position: absolute; left: 0; top: 0; width: 6000px; height: 4000px; transform-origin: top left; }
-.connections { position: absolute; inset: 0; width: 6000px; height: 4000px; overflow: visible; pointer-events: none; }
+.connections { position: absolute; inset: 0; width: 6000px; height: 4000px; overflow: visible; pointer-events: none; z-index: 0; }
+.items-layer { z-index: 1; }
+.foreground-connections { z-index: 2; }
+.foreground-items { z-index: 3; }
 .connection-path { fill: none; stroke: #aab7c1; stroke-width: 2.4; pointer-events: stroke; cursor: grab; }
 .connection-path:hover,.connection-path.selected { stroke: #5479b9; stroke-width: 3.4; }
 .connection-path.selected { cursor: move; }
@@ -129,6 +134,7 @@ button { color: inherit; }
 .item-delete:hover { color: #b75147; }
 .note-body { padding: 2px 17px 18px; min-height: 74px; font-size: 16px; line-height: 1.55; color: #343b45; white-space: pre-wrap; overflow-wrap: anywhere; outline: 0; cursor: text; user-select: text; }
 .note-body:empty::before { content: attr(data-placeholder); color: #c2c1ba; }
+.note-body.quoted { margin-left: 13px; padding-left: 12px; border-left: 3px solid #8d9eb7; color: #4d5967; font-style: italic; }
 .checklist-items { padding: 3px 14px 16px; display: flex; flex-direction: column; gap: 9px; }
 .checklist-row { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.45; }
 .checklist-row input { appearance: none; flex: 0 0 14px; width: 14px; height: 14px; margin: 2px 0 0; border: 1px solid #c3c6c3; border-radius: 3px; cursor: pointer; }
@@ -137,6 +143,7 @@ button { color: inherit; }
 .checklist-row [contenteditable] { outline: none; user-select: text; min-width: 0; flex: 1; }
 .checklist-row.done [contenteditable] { color: #a3a7a4; text-decoration: line-through; }
 .checklist-add { margin: 0 14px 14px 36px; color: #a2a59f; font-size: 12px; cursor: text; outline: none; }
+.checklist-add[hidden] { display: none; }
 .checklist-add:empty::before { content: '+ Adicionar item'; }
 .link-card { padding: 0 15px 14px; display: flex; flex-direction: column; gap: 7px; }
 .link-title { font-size: 14px; font-weight: 600; line-height: 1.4; outline: none; user-select: text; overflow-wrap: anywhere; }
@@ -177,6 +184,8 @@ button { color: inherit; }
 .column-content { position: relative; flex: 1; min-height: 0; margin: 0 8px 8px; border-radius: 4px; }
 .column-empty-hint { position: absolute; z-index: 1; top: 15px; left: 8px; right: 8px; color: #9a9e99; font-size: 11px; text-align: center; pointer-events: none; }
 .column-connections { width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.column-foreground-connections { z-index: 1; }
+.column-foreground-items { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .column-item.drop-target { outline: 2px solid #7897bd; outline-offset: 2px; box-shadow: 0 0 0 5px rgba(120,151,189,.18); }
 .line-icon { font-size: 19px; transform: rotate(-10deg); }
 .draw-icon { font-size: 18px; }
@@ -200,6 +209,7 @@ button { color: inherit; }
 .transparent-swatch span { position: absolute; width: 19px; height: 2px; left: -2px; top: 7px; transform: rotate(-45deg); background: #f0f1f3; box-shadow: 0 0 1px #1a1b1f; }
 .format-select,.dimension-input { height: 27px; border: 1px solid #47494f; border-radius: 4px; background: #25262a; color: #d7d9dc; padding: 0 5px; font-size: 10px; }
 .format-select { width: 120px; }
+.layer-select { width: 94px; }
 .dimension-input { width: 55px; }
 .font-size-input { width: 48px; }
 .format-preset,.format-toggle { height: 27px; border: 1px solid #47494f; border-radius: 4px; background: #25262a; color: #d7d9dc; padding: 0 6px; font-size: 10px; cursor: pointer; }
