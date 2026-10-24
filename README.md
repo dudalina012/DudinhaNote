@@ -1,67 +1,93 @@
- # 🖤 DudinhaNote
+# 🖤 DudinhaNote
+
 <p align="center">
   <strong>A little space for big ideas.</strong>
   <br>
-  A minimalist canvas for notes, brainstorming, checklists, and creative thoughts.
-</p>
-<p align="center">
-  <img src="https://img.shields.io/badge/Status-In%20Development-c4b5fd?style=flat-square" alt="Status: In Development">
+  A visual workspace for notes, brainstorming, and creative projects.
+</p><p align="center">
+  <img src="https://img.shields.io/badge/Status-In%20Development-c4b5fd?style=flat-square" alt="In Development">
   <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white" alt="HTML5">
   <img src="https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white" alt="CSS3">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
+</p>---
+
+✦ About
+
+DudinhaNote is a free, visual note-taking and brainstorming app inspired by "Milanote" (https://milanote.com/).
+
+I created it as a Brazilian student who wanted a more accessible space to organize ideas, study, plan weekly tasks, and develop stories and RPG campaigns.
+
+This is my first project, built to solve a personal problem and learn along the way. It's still a work in progress, so bugs and improvements are expected.
+
+✧ Features
+
+- Visual boards — Create, rename, and switch between boards, including nested boards with navigation paths.
+- Notes & links — Editable text, customizable fonts, colors, formatting, and transparent backgrounds.
+- Checklists & columns — Track tasks and organize content in movable, resizable visual folders.
+- Connections — Create movable, adjustable arrows between ideas.
+- Freehand drawing — Sketch directly on the board with multiple colors, brush sizes, and an eraser.
+- Images — Paste images with "Ctrl + V", drag files onto the board, and resize or zoom into images.
+- Flexible layout — Drag, resize, and arrange cards freely, or place new items exactly where you want them.
+- Undo & redo — Reverse actions with "Ctrl + Z", "Ctrl + Y", or "Ctrl + Shift + Z".
+- Copy & duplicate — Use "Ctrl + C" and "Ctrl + V" to duplicate selected board items during the current session.
+- Personalization — Dark theme, independent card colors, transparent notes, and adjustable text sizes.
+- Local autosave — Board content and images are saved locally using IndexedDB.
+
+🖼️ Screenshots
+
+A first look at DudinhaNote.
+
+<!-- Add your screenshots to a folder such as assets/screenshots/ and uncomment the examples below. --><!--
+<p align="center">
+  <img src="assets/screenshots/main-board.png" width="800" alt="DudinhaNote main board">
+  <br>
+  <em>The main workspace</em>
 </p>
 
-Um app de quadros visuais para Windows, feito para uso pessoal sem conta ou sincronização.
+<p align="center">
+  <img src="assets/screenshots/notes-and-columns.png" width="800" alt="Notes and columns">
+  <br>
+  <em>Notes, checklists, and visual organization</em>
+</p>
+-->🔒 Privacy
 
-## O que já funciona
+DudinhaNote stores its content and images locally in your browser using IndexedDB.
 
-- Quadros locais, com troca de quadro e renomeação.
-- Anotações editáveis, com fundo colorido ou transparente, fontes, tamanho livre, cor do texto, negrito e itálico.
-- Checklists com itens marcáveis e editáveis, e cartões de link com fundos coloridos ou transparentes e texto personalizável.
-- Linhas com seta que podem ser movidas arrastando o traço, curvadas pelo puxador central e ajustadas pelas pontas.
-- Desenho livre no quadro com seis cores, três espessuras de pincel e borracha para apagar traços.
-- Visualização ampliada da imagem com duplo clique e navegação pelo quadro segurando o botão direito do mouse.
-- Colunas que funcionam como pastas visuais: arraste anotações, checklists, links, imagens, linhas e desenhos para dentro delas; arraste a coluna pelo puxador para movê-la com o conteúdo. Título, fundo e tamanho são personalizáveis.
-- Cartões de quadro dentro de outros quadros: cada cartão tem capa quadrada opcional, título editável e abre o quadro filho; os caminhos no topo permitem voltar aos quadros anteriores.
-- Redimensionamento de cartões e imagens pelo puxador ou pelos campos de largura e altura; tamanho do texto ajustável em pixels, com opções de título, subtítulo e texto pequeno.
-- Tema escuro e cores independentes para cada janela de anotação, incluindo a opção transparente para deixar apenas o texto flutuando.
-- Colagem de imagens com `Ctrl+V` ou pelo botão **Colar foto**, exibidas sem fundo ou cartão atrás; arrastar arquivos para o quadro e seleção pelo botão de imagem.
-- Posicionamento de cartões por arrastar, redimensionamento de imagens e zoom.
-- Arraste um ícone da barra até o quadro para criar o conteúdo exatamente naquele ponto; clique em um ícone para posicioná-lo com um clique, como antes.
-- Ferramenta de desenho livre com seis cores, três tamanhos de pincel e borracha para apagar traços; os desenhos também são salvos localmente.
-- Desfazer/refazer ações com `Ctrl+Z`, `Ctrl+Y`, `Ctrl+Shift+Z` ou pelos botões de seta no topo. No quadro, `Ctrl+C` e `Ctrl+V` copiam e duplicam o item selecionado (anotação, checklist, link, imagem, linha ou desenho); a cópia fica disponível durante a sessão e não substitui o conteúdo da área de transferência do Windows. A colagem de imagens externas continua disponível por `Ctrl+V` ou pelo botão **Colar foto**.
-- Salvamento automático do conteúdo e dos arquivos de imagem no IndexedDB local.
+- No account or cloud synchronization is provided.
+- Board data and images are not uploaded to a server by the app.
+- Pasted images are read from your clipboard when you choose to paste them.
+- Links access the internet only when you choose to open them.
 
-O app não sincroniza dados nem envia imagens para um servidor. O botão **Colar foto** lê uma imagem copiada diretamente da área de transferência do Windows. Um link só acessa a internet quando você escolhe abri-lo.
+Keep in mind: clearing browser data may affect locally saved content. Export or backup options should not be assumed to exist unless implemented. 
 
-## Abrir durante o desenvolvimento
+🐛 Feedback & bugs
 
-Requer Node.js. Na pasta do projeto:
+DudinhaNote is still being developed, and feedback is welcome!
 
-```powershell
-npm install
-npm run start
-```
+If you encounter a bug or have an idea for improvement, open an "Issue" (../../issues) and describe what happened. Screenshots and steps to reproduce the problem are especially helpful.
 
-## Criar o instalador do Windows
+This is my first project, so please be kind. Constructive feedback helps me learn and make DudinhaNote better. ♡
 
-```powershell
-npm run build
-```
+🛠️ Built with
 
-O instalador é criado em `dist\DudinhaNote Setup 1.0.0.exe`.
-Uma cópia pronta para compartilhar, com instruções de instalação, fica em `DudinhaNote - Para compartilhar`.
+- HTML
+- CSS
+- JavaScript
 
-## Armazenamento
+📜 License
 
-Os quadros, capas, imagens e desenhos ficam no armazenamento IndexedDB do perfil local do app Electron neste computador. Limpar os dados do app no Windows também apaga esse conteúdo; faça cópias dos arquivos importantes antes de limpar ou desinstalar dados do perfil.
+Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
 
-## Limites desta primeira versão
+This project is intended for personal, educational, and other non-commercial use, subject to the license terms. Commercial use is not permitted under this license.
 
-O editor implementa os cartões e ações principais para um fluxo offline pessoal. O histórico de desfazer/refazer fica em memória durante a sessão e não substitui o salvamento automático local. As linhas ainda não se conectam automaticamente aos cartões; não há sincronização, colaboração ou importação/exportação de quadros.
+See the ""LICENSE"" (LICENSE) file for the complete terms.
 
-## Licença
+🖤 A final note
 
-Este projeto está dedicado ao domínio público sob a [CC0 1.0 Universal](./LICENSE). Você pode copiar, modificar, distribuir e usar o projeto, inclusive para fins comerciais, sem pedir autorização. A atribuição não é obrigatória pela CC0, mas dar crédito à autora é sempre bem-vindo.
+DudinhaNote began as a small solution to a problem I had. It's not perfect or finished, but it's a project I'm proud to share while I keep learning.
 
-Crédito à autora é apreciado, mas não é exigido pela CC0.
+Thank you for checking it out, sharing suggestions, and helping a little idea grow.
+
+Made with curiosity, creativity, and a little detective energy. 🔎
+
+— Dudinha
